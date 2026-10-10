@@ -1,0 +1,8 @@
+**/build*/
+**/.idea/
+**/.vscode/
+**/.cache/
+**/*.su
+**/CMakeUserPresets.json
+**/*.user
+host/portable/
