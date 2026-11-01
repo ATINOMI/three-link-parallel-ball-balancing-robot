@@ -6,3 +6,5 @@
 **/CMakeUserPresets.json
 **/*.user
 host/portable/
+/third_party/dualforge/
+/host/third_party/dualforge/

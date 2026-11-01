@@ -24,10 +24,7 @@
     }
   ],
   "dependency": {
-    "path": "third_party/dualforge",
     "upstream": "https://github.com/ATINOMI/dualforge-cpp",
-    "source": "local working-source snapshot used by the current controller app",
-    "files": 47,
-    "manifest_sha256": "b6ab1280f15093fecb92a79f01ed2b773ff15eb44cfc1173e924ad68b5570b31"
+    "source": "external repository; clone separately and pass DriverRoot or DUALFORGE_ROOT"
   }
 }

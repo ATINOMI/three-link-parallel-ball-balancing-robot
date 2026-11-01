@@ -14,6 +14,6 @@ The bundled MinGW GCC 13.1 runtime libraries are provided under their upstream G
 
 Full license texts are included alongside the portable build in licenses/. Qt SDK/compiler are only needed to develop the application; the portable build contains the runtime files needed to launch it.
 
-DualForge is copied from the user's existing desktop project and linked statically under its MIT license. Its unchanged source and license are included in third_party/dualforge.
+DualForge is maintained separately at [ATINOMI/dualforge-cpp](https://github.com/ATINOMI/dualforge-cpp) and linked statically under its MIT license. Clone that repository and set the CMake `DUALFORGE_ROOT` path when building this Qt application. Driver source is not duplicated here; distributions must retain its license.
 
 SDL 3.4.18 is built from the official, SHA256-verified source archive and linked dynamically as SDL3.dll. SDL uses the zlib license. Upstream source: https://www.libsdl.org/release/SDL3-3.4.18.tar.gz . Its license and DualForge's license are included in portable/licenses/.

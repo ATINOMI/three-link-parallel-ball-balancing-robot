@@ -7,9 +7,9 @@
 | STM32F407 三电机固件 | [embedded/three_motor](embedded/three_motor) | V11角度外环/速度内环、重力补偿、最小角速度及USB回读 |
 | 三电机调参上位机 | [host/3motor](host/3motor) | Web Serial调参，角度/速度跟踪浮窗、参数导入导出 |
 | DualSense 姿态控制 | [host/dual-control-3rrs](host/dual-control-3rrs) | Roll/Pitch映射、轴线拖动、灵敏度、方向键5°等效升降 |
-| 当前DualForge依赖 | [third_party/dualforge](third_party/dualforge) | 当前程序使用的USB驱动与姿态估计源代码，保留原许可证 |
+| DualForge 手柄驱动 | [ATINOMI/dualforge-cpp](https://github.com/ATINOMI/dualforge-cpp) | 独立维护的驱动依赖，本仓库不重复收录源码 |
 
-嵌入式代码只使用 `embedded/three_motor/`，对应本地 `E:\HAL32\F4\three_motor`；旧版 Key 固件已从当前分支移除，历史版本仍可通过 Git 提交记录查阅。仓库原有的 `host/src/` 与 `host/third_party/` 保留。上表是当前版本的入口；不包含本机构建目录、IDE状态和运行时日志。
+嵌入式代码只使用 `embedded/three_motor/`，对应本地 `E:\HAL32\F4\three_motor`；旧版 Key 固件已从当前分支移除，历史版本仍可通过 Git 提交记录查阅。仓库原有的 `host/src/` 保留，DualForge 驱动统一从独立仓库获取。上表是当前版本的入口；不包含本机构建目录、IDE状态和运行时日志。
 
 ## 当前固件参数
 
@@ -21,13 +21,17 @@
 
 调参台在 `host/3motor` 中运行 `start.bat`，使用Chrome/Edge连接平台USB；配套固件为V11。两个上位机不要同时占用平台串口。
 
-手柄上位机的构建脚本沿用本机CLion/MinGW和SDL离线源配置。仓库已包含所用DualForge源码；从其工程目录构建时指定这里的依赖路径：
+手柄上位机的构建脚本沿用本机CLion/MinGW和SDL离线源配置。先从 [DualForge 仓库](https://github.com/ATINOMI/dualforge-cpp) 获取驱动，再通过 `-DriverRoot` 指定路径；已有本地驱动可直接复用。从本仓库根目录执行：
 
 ```powershell
+git clone https://github.com/ATINOMI/dualforge-cpp.git ..\dualforge-cpp
+$driverRoot = (Resolve-Path ..\dualforge-cpp).Path
 Set-Location host/dual-control-3rrs
-powershell -ExecutionPolicy Bypass -File .\build.ps1 -DriverRoot (Resolve-Path ..\..\third_party\dualforge) -SdlSource C:\path\to\SDL3-3.4.18
+powershell -ExecutionPolicy Bypass -File .\build.ps1 -DriverRoot $driverRoot -SdlSource C:\path\to\SDL3-3.4.18
 .\start_control.bat
 ```
+
+旧版 Qt 上位机（`host/CMakeLists.txt`）同样使用外部驱动，默认查找本仓库旁的 `dualforge-cpp/`；可用 CMake 参数 `-DDUALFORGE_ROOT=C:/path/to/dualforge-cpp` 修改。
 
 根据本机环境调整 `build.ps1` 的工具链路径。STM32固件在其目录使用ARM工具链与CMake的Debug预设构建，详见工程CMake配置；不会因运行网页而自动烧录。
 
