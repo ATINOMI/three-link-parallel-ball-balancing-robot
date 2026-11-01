@@ -1,0 +1,119 @@
+{
+  "format": "3motor-tuning",
+  "version": 3,
+  "createdAt": null,
+  "source": "example-angle",
+  "kg": 1.6,
+  "motors": [
+    {
+      "id": 1,
+      "outputScale": 1,
+      "kp": 6.5,
+      "ki": 26,
+      "kd": 0,
+      "pidDown": {
+        "kp": 7,
+        "ki": 15,
+        "kd": 0
+      },
+      "frictionRaw": 0,
+      "frictionMoveDeg": 1
+    },
+    {
+      "id": 2,
+      "outputScale": 0.9,
+      "kp": 6,
+      "ki": 54,
+      "kd": 0,
+      "pidDown": {
+        "kp": 8.4,
+        "ki": 40,
+        "kd": 0
+      },
+      "frictionRaw": 0,
+      "frictionMoveDeg": 1
+    },
+    {
+      "id": 3,
+      "outputScale": 1.1,
+      "kp": 6,
+      "ki": 50,
+      "kd": 0,
+      "pidDown": {
+        "kp": 6.5,
+        "ki": 40,
+        "kd": 0
+      },
+      "frictionRaw": 0,
+      "frictionMoveDeg": 0.05
+    }
+  ],
+  "speedTargets": [
+    0,
+    0,
+    0
+  ],
+  "timing": {
+    "speedPeriodMs": 5,
+    "filterPeriodMs": 5,
+    "cutoffHz": 20
+  },
+  "test": {
+    "motor": 2,
+    "limitA": 0.5,
+    "rampAps": 0.1,
+    "thresholdDeg": 0.5,
+    "durationS": 15,
+    "fixedRaw": 0,
+    "fixedDurationS": 10,
+    "fixedGravity": false
+  },
+  "position": {
+    "targets": [
+      12.77,
+      12.77,
+      12.77
+    ],
+    "pid": [
+      {
+        "up": {
+          "kp": 0,
+          "ki": 0,
+          "kd": 0
+        },
+        "down": {
+          "kp": 0,
+          "ki": 0,
+          "kd": 0
+        },
+        "maxSpeed": 50
+      },
+      {
+        "up": {
+          "kp": 0,
+          "ki": 0,
+          "kd": 0
+        },
+        "down": {
+          "kp": 0,
+          "ki": 0,
+          "kd": 0
+        },
+        "maxSpeed": 50
+      },
+      {
+        "up": {
+          "kp": 0,
+          "ki": 0,
+          "kd": 0
+        },
+        "down": {
+          "kp": 0,
+          "ki": 0,
+          "kd": 0
+        },
+        "maxSpeed": 50
+      }
+    ]
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "format": "3motor-tuning",
+  "version": 2,
+  "createdAt": null,
+  "source": "example",
+  "kg": 1.4,
+  "motors": [
+    {
+      "id": 1,
+      "outputScale": 1,
+      "kp": 0,
+      "ki": 0,
+      "kd": 0,
+      "frictionRaw": 0,
+      "frictionMoveDeg": 0.05,
+      "pidDown": {
+        "kp": 0,
+        "ki": 0,
+        "kd": 0
+      }
+    },
+    {
+      "id": 2,
+      "outputScale": 1,
+      "kp": 0,
+      "ki": 0,
+      "kd": 0,
+      "frictionRaw": 0,
+      "frictionMoveDeg": 0.05,
+      "pidDown": {
+        "kp": 0,
+        "ki": 0,
+        "kd": 0
+      }
+    },
+    {
+      "id": 3,
+      "outputScale": 1,
+      "kp": 0,
+      "ki": 0,
+      "kd": 0,
+      "frictionRaw": 0,
+      "frictionMoveDeg": 0.05,
+      "pidDown": {
+        "kp": 0,
+        "ki": 0,
+        "kd": 0
+      }
+    }
+  ],
+  "speedTargets": [
+    0,
+    0,
+    0
+  ],
+  "timing": {
+    "speedPeriodMs": 5,
+    "filterPeriodMs": 5,
+    "cutoffHz": 20
+  },
+  "test": {
+    "motor": 1,
+    "limitA": 0.5,
+    "rampAps": 0.1,
+    "thresholdDeg": 0.5,
+    "durationS": 15,
+    "fixedRaw": 0,
+    "fixedDurationS": 10,
+    "fixedGravity": false
+  }
+}

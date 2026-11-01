@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>3RRS · 并联机构调试台</title>
+  <link rel="stylesheet" href="style.css?v=angle-settling-1">
+  <script defer src="core.js?v=angle-settling-1"></script>
+  <script defer src="tuning.js?v=angle-settling-1"></script>
+  <script defer src="drawing.js?v=angle-settling-1"></script>
+  <script defer src="serial.js?v=angle-settling-1"></script>
+  <script defer src="app.js?v=angle-settling-1"></script>
+  <script defer src="windows.js?v=angle-settling-1"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><b>3<span>RRS</span></b><div>并联机构实验台<small>PARALLEL ROBOT / CONTROL CONSOLE</small></div></div>
+    <div class="connection"><span class="dot" id="linkDot"></span><div><span id="linkState">未连接</span><small id="linkDetail">USB CDC · 本地实验</small></div></div>
+    <nav aria-label="设备连接">
+      <button id="demoBtn" class="quiet">离线演示</button>
+      <button id="connectBtn">连接 USB</button>
+      <button id="disconnectBtn" class="quiet" disabled>断开</button>
+      <button id="emergencyBtn" class="danger" aria-keyshortcuts="q" title="快捷键 Q（控制台页面有焦点时）">急停 Q · 全部零电流</button>
+    </nav>
+  </header>
+  <main>
+    <div class="page-heading"><div><p class="eyebrow">3-RRS / 实时监测与调试</p><h1>并联机构调试台</h1><p>上升为负，下降为正 · 参数以设备回读为准</p></div><div class="mode-badge"><span id="deviceMode">等待设备</span><small>上升为负 · 下降为正</small></div></div>
+<nav class="tool-nav" aria-label="调试工具"><span>调试工具</span><button id="speedParamsOpenBtn" class="fixed-window-launcher speed-params-launcher" aria-controls="speedParamsWindow">速度环调参</button><button id="speedTrackOpenBtn" class="fixed-window-launcher speed-track-launcher" aria-controls="speedTrackWindow">速度跟踪</button><button id="positionParamsOpenBtn" class="fixed-window-launcher" aria-controls="positionParamsWindow">角度环调参</button><button id="positionTrackOpenBtn" class="fixed-window-launcher" aria-controls="positionTrackWindow">角度跟踪</button><button id="fixedOpenBtn" class="fixed-window-launcher" type="button" aria-controls="fixedWindow">固定电流</button><button id="responseOpenBtn" class="fixed-window-launcher" type="button" aria-controls="responsePanel">电机响应</button></nav>
+    <section class="equation" aria-label="所选电机原始电流指令组成">
+      <div><small>所选电机 · 重力补偿指令</small><strong id="currentBase">—</strong><span>raw</span></div><b>＋</b>
+      <div class="increment"><small id="currentDeltaLabel">测试增量指令</small><strong id="currentDelta">—</strong><span>raw</span></div><b>＝</b>
+      <div class="total"><small>实际下发总指令</small><strong id="currentTotal">—</strong><span>raw</span></div>
+      <p>其余两台电机<br><strong>各自按方向补偿</strong></p>
+    </section>
+    <div class="workspace">
+      <div class="monitor">
+        <section class="panel model-panel">
+          <div class="panel-title"><div><small>01 / MECHANISM</small><h2>平台姿态</h2></div><div class="view-tabs" aria-label="视角"><button data-view="iso" class="active">等轴</button><button data-view="top">俯视</button><button data-view="side">侧视</button></div></div>
+          <div class="viewport"><canvas id="mechanism" aria-label="3-RRS 连杆与平台姿态"></canvas><span class="viewport-label">CB 60 / BA 102 / r₀ 126 / rₚ 137 mm</span><span class="axes">Z ↑<br>X ↙　↘ Y</span></div>
+          <div class="pose-values"><div>倾角 ψX <strong id="poseRoll">—</strong> °</div><div>倾角 ψY <strong id="posePitch">—</strong> °</div><div>高度 Z <strong id="poseZ">—</strong> mm</div></div>
+        </section>
+        <section class="panel feedback-panel"><div class="panel-title"><div><small>02 / FEEDBACK</small><h2>三电机反馈</h2></div><span class="muted">输出轴角度 / 电流</span></div><div id="motorCards" class="motor-cards"></div></section>
+        <section class="panel response-panel" id="responsePanel">
+          <div class="panel-title response-window-handle" id="responseHandle" tabindex="0" aria-label="浮出后可拖动响应图表，方向键可移动"><div><small>03 / RESPONSE</small><h2 id="responseTitle">所选电机响应 · 原始采样</h2></div><div class="window-actions"><button id="responseFloatBtn" class="quiet" type="button" aria-controls="responsePanel">浮出窗口</button><button id="responseExpandBtn" class="quiet" type="button">放大图表</button><button id="responseCloseBtn" class="quiet window-close" type="button" aria-label="收回响应图表到页面，不停止控制" hidden>×</button></div></div><div class="response-body">
+          <div class="plot-toolbar"><label>时间窗口<select id="responseTimeWindow"><option value="1">1秒</option><option value="2">2秒</option><option value="5" selected>5秒</option><option value="10">10秒</option><option value="20">20秒</option><option value="60">60秒</option></select></label><button id="responsePauseBtn" class="quiet" type="button">暂停图表</button><label class="plot-check"><input id="responsePoints" type="checkbox">采样点</label><span id="responseSampling" class="plot-meta">等待设备采样</span></div>
+          <div class="plot-review"><label for="responseOffset">暂停回看</label><input id="responseOffset" type="range" min="0" max="0" step="0.001" value="0" disabled><span id="responseOffsetText">实时</span></div>
+          <div class="chart-head"><strong>输出轴角度 / °</strong><span id="angleStats"></span></div>
+          <div class="plot-axis"><label class="plot-check"><input id="angleFixedY" type="checkbox">固定纵轴</label><label>下限<input id="angleYMin" type="number" step="0.001" value="12.5"></label><label>上限<input id="angleYMax" type="number" step="0.001" value="13"></label><span>自动轴仅按当前窗口缩放</span></div>
+          <canvas id="angleChart" class="chart response-chart" aria-label="所选电机角度原始采样，可移动鼠标查看精确数值"></canvas>
+          <div class="chart-head"><strong>电流指令 / raw</strong><span class="legend"><i class="base"></i>重力<i class="delta"></i>PID/摩擦/测试<i class="total"></i>总量</span></div><p id="currentStats" class="plot-summary"></p>
+          <div class="plot-axis"><label class="plot-check"><input id="currentFixedY" type="checkbox">固定纵轴</label><label>下限<input id="currentYMin" type="number" step="1" value="-1000"></label><label>上限<input id="currentYMax" type="number" step="1" value="1000"></label></div>
+          <canvas id="currentChart" class="chart response-chart" aria-label="重力、PID或测试分量与总电流指令的原始raw曲线"></canvas>
+          <p class="plot-summary">暂停仅冻结曲线，控制仍在运行。鼠标定位到真实采样点；曲线不额外平滑，回传中断处断线显示。</p>
+        </div><button id="responsePanelResize" class="window-resize-grip" type="button" aria-label="拉伸浮窗宽高：拖动或按方向键" title="拖动可独立改变宽高；方向键缩放，Shift 微调">⤡</button></section>
+      </div>
+      <aside class="controls">
+        <section class="panel baseline-panel"><div class="panel-title"><div><small>BASELINE / MEASURED MOTION</small><h2>重力补偿基线</h2></div><span class="tag">实测上升开启</span></div><p class="hint" id="paramState">等待设备回传当前系数</p><p class="hint" id="outputScaleState">等待设备回传三路比例</p><div class="baseline-recovery"><button id="gravityBtn" class="quiet full">启用 / 恢复重力补偿</button></div><details class="baseline-settings"><summary>系数与三路输出比例</summary><div class="panel-body"><label for="kgInput">补偿系数 k<sub>g</sub></label><div class="input-action"><input id="kgInput" type="number" min="0" max="5" step="0.001" value="1.4"><button id="applyBtn">应用</button></div><div class="output-scale-grid">
+<label for="outputScale1">M1 输出比例<input id="outputScale1" type="number" min="0" max="5" step="0.001" value="1"></label>
+<label for="outputScale2">M2 输出比例<input id="outputScale2" type="number" min="0" max="5" step="0.001" value="1"></label>
+<label for="outputScale3">M3 输出比例<input id="outputScale3" type="number" min="0" max="5" step="0.001" value="1"></label>
+</div><button id="outputScaleApplyBtn" class="quiet full">应用三路输出比例</button>
+
+<details class="help-disclosure"><summary>输出比例如何作用</summary><p class="hint">最终总电流 × 对应比例；0 关闭该路，1 保持原值。固定指令也经过此比例，修改本次上电有效。</p></details>
+<details class="help-disclosure"><summary>重力补偿的启停条件</summary><p class="hint">实测上升时开启重力补偿，下降和静止时关闭；不按目标方向提前开启。急停全部清零。</p></details></div></details></section>
+        <section class="panel test-panel"><div class="panel-title"><div><small>TEST / ADDITIVE CURRENT</small><h2>单电机起动测试</h2></div></div><div class="panel-body">
+          <label for="motorSelect">测试电机</label><select id="motorSelect"><option value="1">M1 · 支链 1</option><option value="2">M2 · 支链 2</option><option value="3">M3 · 支链 3</option></select>
+          <div class="field-grid"><label>增量上限 / A<input id="limitInput" type="number" min="0.01" max="5" step="0.01" value="0.5"></label><label>增量速率 / A/s<input id="rampInput" type="number" min="0.01" max="2" step="0.01" value="0.1"></label><label>明显位移 / °<input id="thresholdInput" type="number" min="0.05" max="10" step="0.05" value="0.5"></label><label>最长时间 / s<input id="durationInput" type="number" min="1" max="60" step="1" value="15"></label></div>
+          <div class="direction-buttons"><button id="upBtn">↑ 向上测试<small>负增量</small></button><button id="downBtn">↓ 向下测试<small>正增量</small></button></div>
+          <details class="help-disclosure"><summary>起动测试如何结束</summary><p class="hint">重力补偿按实测方向启停；位移达到阈值并确认 3 帧后结束测试。</p></details>
+          <div class="test-state"><span id="phaseLabel">待测试</span><div>位移 <strong id="displacement">—</strong> ° <small>/ <span id="liveThreshold">0.50</span> °</small></div><small>起始角度 <span id="startAngle">—</span> °</small></div>
+          <button id="finishBtn" class="quiet full" disabled>结束测试 · 回到重力补偿</button>
+        </div></section>
+        <section class="panel result-panel"><div class="panel-title"><div><small>LAST RESULT</small><h2>最近一次结果</h2></div></div><div class="panel-body"><small id="resultCaption">达到位移阈值时的测试增量</small><div class="result-number"><strong id="resultDelta">—</strong><span id="resultUnit">A</span></div><p id="resultHint">尚未测试</p><p class="hint" id="resultTotal">结果取设备回传值，不把重力电流算进测试增量。</p></div></section>
+      </aside>
+    </div>
+    <details class="panel records"><summary>本次测试记录 <span>最近 10 次 · 点击展开</span></summary><div class="panel-title"><div><small>SESSION / RESULTS</small><h2>本次测试记录</h2></div><span class="muted">保留最近 10 次 · 仅本次页面</span></div><div class="table-scroll"><table><thead><tr><th>电机 / 方向</th><th>结果</th><th>重力基线 A</th><th>测试输入 A</th><th>总指令 A</th><th>位移 °</th><th>用时 s</th></tr></thead><tbody id="resultsBody"><tr><td colspan="7" class="empty">连接设备或进入离线演示，开始一次起动测试。</td></tr></tbody></table></div></details>
+    <footer><span>3RRS LAB / USB · V2–V9</span><span id="notice" role="status" aria-live="polite">等待连接。实际装置验收由你进行。</span></footer>
+  </main>
+<section class="panel fixed-panel fixed-window" id="fixedWindow" role="dialog" aria-modal="false" aria-labelledby="fixedWindowTitle" hidden><div class="panel-title fixed-window-handle" id="fixedWindowHandle" tabindex="0" aria-label="拖动固定电流指令浮窗，方向键可移动"><div><small>TEST / FIXED RAW COMMAND</small><h2 id="fixedWindowTitle">固定电流指令</h2></div><div class="window-actions"><small>拖动标题栏</small><button id="fixedCloseBtn" class="quiet window-close" type="button" aria-label="关闭浮窗并结束固定指令测试" title="关闭并结束固定测试">×</button></div></div><div class="panel-body">
+          <label for="fixedMotorSelect">测试电机</label><select id="fixedMotorSelect"><option value="1">M1 · 支链 1</option><option value="2">M2 · 支链 2</option><option value="3">M3 · 支链 3</option></select><details class="help-disclosure"><summary>工作原理与说明</summary><p class="hint">关闭补偿：给定值乘对应输出比例后作为总指令。开启开关后，只在实测上升时补偿，下降和静止时关闭，与给定指令的符号无关。不做斜坡或位移阈值停止。</p></details>
+          <label class="fixed-gravity-toggle"><input id="fixedGravityInput" type="checkbox">允许重力补偿（实测上升时开启）</label>
+          <div class="field-grid"><label>给定电流指令 / raw<input id="fixedRawInput" type="number" min="-16384" max="16384" step="1" value="0"></label><label>持续时间 / s<input id="fixedDurationInput" type="number" min="1" max="60" step="1" value="10"></label></div>
+          <button id="fixedApplyBtn" class="full">下发固定指令</button>
+          <p class="hint" id="fixedState">可输入正数、负数或零；运行中可修改数值后再次下发。</p>
+          <button id="fixedEndBtn" class="quiet full" disabled>结束固定指令 · 回到原逻辑</button>
+        </div><button id="fixedWindowResize" class="window-resize-grip" type="button" aria-label="拉伸浮窗宽高：拖动或按方向键" title="拖动可独立改变宽高；方向键缩放，Shift 微调">⤡</button></section>
+
+<section id="speedParamsWindow" class="panel fixed-window speed-params-window" role="dialog" aria-modal="false" aria-labelledby="speedParamsTitle" hidden>
+  <div id="speedParamsHandle" class="panel-title fixed-window-handle" tabindex="0" aria-label="拖动速度环调参浮窗，方向键可移动"><div><small>CONTROL / VELOCITY PID</small><h2 id="speedParamsTitle">速度环 · PID / 摩擦</h2></div><button id="speedParamsCloseBtn" class="quiet window-close" aria-label="关闭调参浮窗并停止速度环">×</button></div>
+  <div class="panel-body"><div class="speed-command"><h3>三路目标速度 <small>°/s</small></h3><div class="output-scale-grid"><label for="speedTarget1">M1 目标 °/s<input id="speedTarget1" type="number" min="-180" max="180" step="0.001" value="0"></label><label for="speedTarget2">M2 目标 °/s<input id="speedTarget2" type="number" min="-180" max="180" step="0.001" value="0"></label><label for="speedTarget3">M3 目标 °/s<input id="speedTarget3" type="number" min="-180" max="180" step="0.001" value="0"></label></div>    <button id="speedStartBtn" class="full">启动速度环</button><button id="speedStopBtn" class="quiet full speed-stop" disabled>停止速度环 · 三路零电流</button><p id="speedControlState" class="hint" role="status">等待速度遥测</p></div><h3 class="settings-heading">电机参数</h3>
+
+    <label for="pidDirectionSelect">PID参数方向</label><select id="pidDirectionSelect"><option value="-1">上升 · 目标速度为负（角度−）</option><option value="1">下降 · 目标速度为正（角度＋）</option></select>
+    <label for="pidMotorSelect">参数对应电机</label><select id="pidMotorSelect"><option value="1">M1</option><option value="2">M2</option><option value="3">M3</option></select>
+    <div class="field-grid"><label for="pidKp">Kp · raw/(°/s)<input id="pidKp" type="number" min="0" step="0.001" value="0"></label><label for="pidKi">Ki · raw/°<input id="pidKi" type="number" min="0" step="0.001" value="0"></label><label for="pidKd">Kd · raw/(°/s²)<input id="pidKd" type="number" min="0" step="0.001" value="0"></label><label for="pidFriction">起动静摩擦幅值（双向共用） / raw<input id="pidFriction" type="number" min="0" max="16384" step="1" value="0"></label></div>
+    <button id="pidApplyBtn" class="quiet full">应用所选方向PID / 该电机摩擦</button><p id="pidParamState" class="hint" role="status">等待设备回读 · 表单数值不代表已生效</p>
+    <label for="frictionMoveInput">撤销补偿的输出轴位移阈值 / °</label><div class="input-action"><input id="frictionMoveInput" type="number" min="0.001" max="1" step="0.001" value="0.05"><button id="frictionMoveApplyBtn">应用阈值</button></div>
+    <p id="frictionMoveState" class="hint" role="status">等待设备阈值</p>
+    <button id="frictionRestoreBtn" class="quiet full" disabled>恢复所选电机静摩擦补偿</button>
+    <details class="help-disclosure"><summary>手动恢复静摩擦的作用</summary><p class="hint">速度或角度模式运行且该路目标速度非零时可手动恢复，使用设备已生效的静摩擦幅值；相对起点净位移达到阈值即撤掉，不改变PID或目标速度。</p></details>
+
+    <details class="help-disclosure"><summary>方向、PID 与补偿规则</summary><p class="hint">负速度抬升，正速度下降。按目标速度正负切换上下两组PID，零目标沿用上一组；换向清除该路PID历史。重力补偿按实测上升开启、下降和静止关闭，静摩擦项仅在静止起动时按目标方向给定，相对起点净位移达到阈值即撤掉；连续指令不重复开启。最终电流仍经过三路输出比例。参数修改本次上电有效。</p></details>
+
+  <details class="settings-disclosure tuning-file-panel"><summary>参数文件 · 导入 / 导出 / 批量应用</summary><div class="disclosure-body"><div class="tuning-file-actions"><label for="tuningExportSource">导出内容<select id="tuningExportSource"><option value="device">设备已生效参数</option><option value="draft">当前调参表单</option></select></label><button id="tuningExportBtn" class="quiet" type="button">导出参数</button><button id="tuningImportBtn" class="quiet" type="button">导入文件</button></div>
+      <input id="tuningFileInput" type="file" accept=".json,application/json" hidden>
+      <button id="tuningApplyAllBtn" class="quiet full" type="button">应用表单中的全部参数</button><p id="tuningFileState" class="hint" role="status">导入只填入表单，不发送电流或目标速度；应用全部参数需先结束测试。</p>
+    </div></details>
+  <details class="settings-disclosure timing-panel"><summary>更新频率 · 速度环 / 滤波</summary><div class="disclosure-body"><div class="field-grid"><label for="speedRateInput">速度环更新 / Hz<input id="speedRateInput" type="number" min="20" max="1000" step="1" value="200"></label><label for="filterRateInput">滤波器更新 / Hz<input id="filterRateInput" type="number" min="50" max="1000" step="1" value="200"></label></div><button id="timingApplyBtn" class="quiet full" type="button">应用更新频率</button><p id="timingState" class="hint" role="status">默认均为200Hz；实际周期按1ms取整，以设备回读为准。</p><p id="filterPhaseState" class="hint">二阶巴特沃斯截止20Hz，替换原一阶滤波。</p><details class="help-disclosure"><summary>更新频率与测速的区别</summary><p class="hint">更改频率会清除三路PID积分/历史，保留目标与参数，不会启动速度环。原始角度窗口测速约200Hz，提高计算频率不会增加新的测速样本。</p></details></div></details>
+  </div>
+<button id="speedParamsWindowResize" class="window-resize-grip" type="button" aria-label="拉伸浮窗宽高：拖动或按方向键" title="拖动可独立改变宽高；方向键缩放，Shift 微调">⤡</button></section>
+<section id="speedTrackWindow" class="panel fixed-window speed-track-window" role="dialog" aria-modal="false" aria-labelledby="speedTrackTitle" hidden>
+  <div id="speedTrackHandle" class="panel-title fixed-window-handle" tabindex="0" aria-label="拖动速度跟踪浮窗，方向键可移动"><div><small>FEEDBACK / VELOCITY TRACKING</small><h2 id="speedTrackTitle">速度跟踪 · 抖动观测</h2></div><div class="window-actions"><button id="speedExpandBtn" class="quiet" type="button">最大化</button><button id="speedTrackCloseBtn" class="quiet window-close" aria-label="关闭速度跟踪浮窗">×</button></div></div>
+  <div class="panel-body">
+    <div class="plot-toolbar"><label>电机<select id="speedViewMotor"><option value="1">M1 · 大图</option><option value="2">M2 · 大图</option><option value="3">M3 · 大图</option><option value="all">三台纵向对比</option></select></label><label>时间窗口<select id="speedTimeWindow"><option value="1">1秒</option><option value="2">2秒</option><option value="5" selected>5秒</option><option value="10">10秒</option><option value="20">20秒</option><option value="60">60秒</option></select></label><label>显示<select id="speedPlotMode"><option value="tracking">目标＋实测</option><option value="error">误差：实测−目标</option></select></label><button id="speedPauseBtn" class="quiet" type="button">暂停图表</button><label class="plot-check"><input id="speedPoints" type="checkbox">采样点</label></div>
+    <div class="plot-axis"><label class="plot-check"><input id="speedFixedY" type="checkbox">固定纵轴</label><label>下限 °/s<input id="speedYMin" type="number" step="0.001" value="-0.5"></label><label>上限 °/s<input id="speedYMax" type="number" step="0.001" value="0.5"></label><span id="speedSampling" class="plot-meta">等待设备采样</span></div>
+    <div class="plot-review"><label for="speedOffset">暂停回看</label><input id="speedOffset" type="range" min="0" max="0" step="0.001" value="0" disabled><span id="speedOffsetText">实时</span></div>
+    <p id="speedStats" class="plot-summary"></p>
+    <div id="speedLegend" class="speed-legend"><span class="target-key">目标速度</span><span class="measured-key">实测速度</span><span>单位 °/s</span></div>
+<div id="speedPlotBlock1" class="speed-chart-block"><div class="speed-chart-reading"><b>M1</b><span id="speedReading1">等待数据</span></div><canvas id="speedChart1" class="chart speed-chart" aria-label="M1目标速度和实际速度曲线"></canvas><p class="hint" id="speedOutput1">PID — / 摩擦 — / 总电流 — raw</p></div><div id="speedPlotBlock2" class="speed-chart-block"><div class="speed-chart-reading"><b>M2</b><span id="speedReading2">等待数据</span></div><canvas id="speedChart2" class="chart speed-chart" aria-label="M2目标速度和实际速度曲线"></canvas><p class="hint" id="speedOutput2">PID — / 摩擦 — / 总电流 — raw</p></div><div id="speedPlotBlock3" class="speed-chart-block"><div class="speed-chart-reading"><b>M3</b><span id="speedReading3">等待数据</span></div><canvas id="speedChart3" class="chart speed-chart" aria-label="M3目标速度和实际速度曲线"></canvas><p class="hint" id="speedOutput3">PID — / 摩擦 — / 总电流 — raw</p></div><p class="plot-summary">暂停只冻结图表，目标与控制继续运行。误差模式＋固定小纵轴适合观察稳态抖动；峰峰值和RMS按当前可见窗口计算。</p></div><button id="speedTrackWindowResize" class="window-resize-grip" type="button" aria-label="拉伸浮窗宽高：拖动或按方向键" title="拖动可独立改变宽高；方向键缩放，Shift 微调">⤡</button></section>
+<section id="positionParamsWindow" class="panel fixed-window speed-params-window position-params-window" role="dialog" aria-modal="false" aria-labelledby="positionParamsTitle" hidden>
+  <div id="positionParamsHandle" class="panel-title fixed-window-handle" tabindex="0" aria-label="拖动角度环调参浮窗，方向键可移动"><div><small>CONTROL / POSITION CASCADE</small><h2 id="positionParamsTitle">角度环 · 串级PID</h2></div><button id="positionParamsCloseBtn" class="quiet window-close" aria-label="关闭调参浮窗并停止角度环">×</button></div>
+  <div class="panel-body"><div class="speed-command"><h3>三路目标角度 <small>°</small></h3><div class="output-scale-grid"><label for="positionTarget1">M1 目标 °<input id="positionTarget1" type="number" min="-180" max="180" step="0.001" value="12.77"></label><label for="positionTarget2">M2 目标 °<input id="positionTarget2" type="number" min="-180" max="180" step="0.001" value="12.77"></label><label for="positionTarget3">M3 目标 °<input id="positionTarget3" type="number" min="-180" max="180" step="0.001" value="12.77"></label></div><button id="positionStartBtn" class="full">启动角度环</button><button id="positionStopBtn" class="quiet full speed-stop" disabled>停止角度环 · 三路零电流</button><p id="positionControlState" class="hint" role="status">等待V8固件回传</p></div>
+    <label for="positionDirectionSelect">角度PID参数方向</label><select id="positionDirectionSelect"><option value="-1">上升 · 目标低于当前角度（角度−）</option><option value="1">下降 · 目标高于当前角度（角度＋）</option></select>
+    <label for="positionMotorSelect">参数对应电机</label><select id="positionMotorSelect"><option value="1">M1</option><option value="2">M2</option><option value="3">M3</option></select>
+    <div class="field-grid"><label for="positionKp">Kp · 1/s<input id="positionKp" type="number" min="0" step="0.001" value="0"></label><label for="positionKi">Ki · 1/s²<input id="positionKi" type="number" min="0" step="0.001" value="0"></label><label for="positionKd">Kd<input id="positionKd" type="number" min="0" step="0.001" value="0"></label><label for="positionMaxSpeed">该电机速度上限 · °/s<input id="positionMaxSpeed" type="number" min="0.001" max="180" step="0.001" value="50"></label></div>
+    <label for="positionMinSpeed">该电机最小角速度 · °/s（双向共用）<input id="positionMinSpeed" type="number" min="0" max="180" step="0.001" value="0" disabled></label>
+    <p class="hint">默认0表示不设下限；误差超出到位范围时抬高非零外环速度，到位确认期间不抬高，稳定到位后为0。最小值不能超过上限，设置需V11固件。</p>
+    <button id="positionApplyBtn" class="quiet full">应用所选方向角度PID / 速度上下限</button><p id="positionParamState" class="hint" role="status">角度PID默认全0，以设备回读为准</p>
+    <div class="settings-disclosure"><h3>稳定到位判定 · 三路共用设置</h3><div class="field-grid"><label for="positionTolerance">允许误差 ±°<input id="positionTolerance" type="number" min="0.001" max="10" step="0.001" value="0.5"></label><label for="positionHoldMs">连续稳定时间 / ms<input id="positionHoldMs" type="number" min="1" max="5000" step="1" value="20"></label></div><button id="positionSettlingApplyBtn" class="quiet full" type="button">应用到位范围 / 稳定时间</button><p id="positionSettlingState" class="hint" role="status">等待V9设备回读</p><p class="hint">连续处于范围内才视为成功；到位后外环目标速度为0，速度内环继续稳住。超出范围自动恢复角度纠偏。</p></div>
+    <p id="positionTimingState" class="hint">角度环与速度环同步更新</p><details class="help-disclosure"><summary>串级控制与保护</summary><p class="hint">角度PID输出目标速度，现有速度PID输出电流。先调好速度环，再调角度环；外环按角度误差正负选组，零误差沿用上一组。速度限幅在外环执行；重力和静摩擦保持原逻辑。回程到0°及−80°保护仍生效。修改参数不启动电机；参数文件入口在速度调参浮窗中。</p></details>
+  </div><button id="positionParamsWindowResize" class="window-resize-grip" type="button" aria-label="拉伸角度调参浮窗宽高">⤡</button></section>
+<section id="positionTrackWindow" class="panel fixed-window speed-track-window" role="dialog" aria-modal="false" aria-labelledby="positionTrackTitle" hidden>
+  <div id="positionTrackHandle" class="panel-title fixed-window-handle" tabindex="0" aria-label="拖动角度跟踪浮窗，方向键可移动"><div><small>FEEDBACK / POSITION TRACKING</small><h2 id="positionTrackTitle">角度跟踪 · 抖动观测</h2></div><div class="window-actions"><button id="positionExpandBtn" class="quiet" type="button">最大化</button><button id="positionTrackCloseBtn" class="quiet window-close" aria-label="关闭角度跟踪浮窗">×</button></div></div>
+  <div class="panel-body">
+    <div class="plot-toolbar"><label>电机<select id="positionViewMotor"><option value="1">M1 · 大图</option><option value="2">M2 · 大图</option><option value="3">M3 · 大图</option><option value="all">三台纵向对比</option></select></label><label>时间窗口<select id="positionTimeWindow"><option value="1">1秒</option><option value="2">2秒</option><option value="5" selected>5秒</option><option value="10">10秒</option><option value="20">20秒</option><option value="60">60秒</option></select></label><label>显示<select id="positionPlotMode"><option value="tracking">目标＋实测</option><option value="error">误差：实测−目标</option></select></label><button id="positionPauseBtn" class="quiet" type="button">暂停图表</button><label class="plot-check"><input id="positionPoints" type="checkbox">采样点</label></div>
+    <div class="plot-axis"><label class="plot-check"><input id="positionFixedY" type="checkbox">固定纵轴</label><label>下限 °<input id="positionYMin" type="number" step="0.001" value="-0.5"></label><label>上限 °<input id="positionYMax" type="number" step="0.001" value="0.5"></label><span id="positionSampling" class="plot-meta">等待设备采样</span></div>
+    <div class="plot-review"><label for="positionOffset">暂停回看</label><input id="positionOffset" type="range" min="0" max="0" step="0.001" value="0" disabled><span id="positionOffsetText">实时</span></div>
+    <p id="positionStats" class="plot-summary"></p>
+    <div id="positionLegend" class="speed-legend"><span class="target-key">目标角度</span><span class="measured-key">实测角度</span><span>单位 °</span></div>
+<div id="positionPlotBlock1" class="speed-chart-block"><div class="speed-chart-reading"><b>M1</b><span id="positionReading1">等待数据</span></div><canvas id="positionChart1" class="chart speed-chart" aria-label="M1目标角度和实际角度曲线"></canvas><p class="hint" id="positionOutput1">外环目标速度 — °/s / 总电流 — raw</p></div><div id="positionPlotBlock2" class="speed-chart-block"><div class="speed-chart-reading"><b>M2</b><span id="positionReading2">等待数据</span></div><canvas id="positionChart2" class="chart speed-chart" aria-label="M2目标角度和实际角度曲线"></canvas><p class="hint" id="positionOutput2">外环目标速度 — °/s / 总电流 — raw</p></div><div id="positionPlotBlock3" class="speed-chart-block"><div class="speed-chart-reading"><b>M3</b><span id="positionReading3">等待数据</span></div><canvas id="positionChart3" class="chart speed-chart" aria-label="M3目标角度和实际角度曲线"></canvas><p class="hint" id="positionOutput3">外环目标速度 — °/s / 总电流 — raw</p></div><p class="plot-summary">暂停只冻结图表，目标与控制继续运行。误差模式＋固定小纵轴适合观察稳态抖动；峰峰值和RMS按当前可见窗口计算。</p></div><button id="positionTrackWindowResize" class="window-resize-grip" type="button" aria-label="拉伸浮窗宽高：拖动或按方向键" title="拖动可独立改变宽高；方向键缩放，Shift 微调">⤡</button></section>
+
+</body>
+</html>

@@ -1,0 +1,33 @@
+{
+  "snapshot_date": "2026-11-01",
+  "components": [
+    {
+      "path": "embedded/three_motor",
+      "commit": "538ea269e062e74489ce6c3f7309520199efb5ce",
+      "tree": "e4ab6fee3099694f03fc421c0be08953a91e5522",
+      "branch": "codex/gamepad-platform-control",
+      "files": 139
+    },
+    {
+      "path": "host/3motor",
+      "commit": "be404a2b06def9475577dcc42d5fb4c125babc26",
+      "tree": "bf9e72340af9dfb6958b5ec6d7f5c10bb7256e7e",
+      "branch": "codex/ui-baseline",
+      "files": 38
+    },
+    {
+      "path": "host/dual-control-3rrs",
+      "commit": "4f5fcedb0140afa6d49958c0ae3661f3a25c0822",
+      "tree": "91d3c35ac95cd352e645da4d2718ad840643f08c",
+      "branch": "codex/gamepad-platform-control",
+      "files": 26
+    }
+  ],
+  "dependency": {
+    "path": "third_party/dualforge",
+    "upstream": "https://github.com/ATINOMI/dualforge-cpp",
+    "source": "local working-source snapshot used by the current controller app",
+    "files": 47,
+    "manifest_sha256": "b6ab1280f15093fecb92a79f01ed2b773ff15eb44cfc1173e924ad68b5570b31"
+  }
+}

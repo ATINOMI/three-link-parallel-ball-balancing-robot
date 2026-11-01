@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>3-RRS · 手柄姿态控制</title><link rel="stylesheet" href="/style.css"></head>
+<body>
+<header><a class="wordmark" href="/">3—RRS <span>姿态控制台</span></a><div class="connections"><span id="hand-status">手柄 · 等待连接</span><span id="motor-status">平台 · 未连接</span></div></header>
+<main>
+  <section class="visual" aria-label="平台姿态可视化">
+    <div class="figure-title"><div><p class="eyebrow">DUALSENSE → PLATFORM</p><h1>手中的倾斜，<br>平台的姿态。</h1></div><span id="visual-label" class="tag">初始姿态示意</span></div>
+    <div class="scene-area">
+      <canvas id="scene" aria-label="三支链姿态图，可拖动手柄Pitch和Roll正方向箭头调整轴向，也可使用下方设置"></canvas>
+      <details id="axis-editor" class="axis-editor">
+        <summary>轴向对齐 <span>↗</span></summary>
+        <fieldset id="axis-fields">
+          <label for="axis-preset">基准对齐</label>
+          <select id="axis-preset">
+            <option value="150">Pitch → M3 径向（默认）</option>
+            <option value="0">Roll → 平台 X / Pitch → 平台 Y</option>
+            <option value="30">Pitch → M2 径向</option>
+            <option value="-90">Pitch → 平台 X / M1 径向</option>
+            <option value="custom">自定义</option>
+          </select>
+          <label for="axis-angle">基准坐标旋转 / °</label>
+          <input id="axis-angle" type="number" min="-180" max="180" step="1" value="150">
+          <label class="axis-check"><input id="axis-swap" type="checkbox">交换手柄 Pitch / Roll</label>
+          <div class="axis-directions">
+            <label for="axis-pitch-sign">手柄 Pitch 方向<select id="axis-pitch-sign"><option value="1">正向 +</option><option value="-1">反向 −</option></select></label>
+            <label for="axis-roll-sign">手柄 Roll 方向<select id="axis-roll-sign"><option value="1">正向 +</option><option value="-1">反向 −</option></select></label>
+          </div>
+          <button id="axis-reset" type="button">恢复 Pitch 对齐 M3</button>
+        </fieldset>
+        <p id="axis-help">可拖动图中彩色箭头；两轴始终垂直。</p>
+      </details>
+    </div>
+    <div class="axis-summary" aria-live="polite"><span id="axis-summary">Pitch + → 240° · Roll + → 150°</span><span id="axis-save-state">本机自动保存</span></div>
+    <div class="legend"><span><i></i>设备反馈</span><span><i class="dashed"></i>有效目标</span><span class="axis-note">模型 X / Y · Z / 高度</span></div>
+  </section>
+  <aside>
+    <p class="eyebrow">CONTROL / 01</p><h2>连接，然后跟随</h2>
+    <p class="intro">在姿态图中调整手柄轴向与正负方向。<br>方向键 ↑ / ↓ 升降，每次等效 5°。</p>
+    <label class="sensitivity-row" for="pose-sensitivity">姿态灵敏度 / 倍
+      <input id="pose-sensitivity" type="number" min="0" max="10" step="0.05" value="1" aria-describedby="sensitivity-hint">
+    </label>
+    <p id="sensitivity-hint" class="sensitivity-hint">1 倍等幅，0 倍暂停姿态跟随；不影响升降。</p>
+    <button id="connect" class="outline">连接平台 USB</button>
+    <button id="start" class="primary" disabled>开始控制</button>
+    <button id="home" class="outline" disabled><span class="circle">○</span> 回到初始角度 12.77°</button>
+    <div id="state-box" class="state" aria-live="polite"><span id="state-dot"></span><div><b id="state-title">未开始</b><p id="message">先连接平台，手柄保持静止约 2 秒完成校准。</p></div></div>
+    <button id="stop" class="stop">急停 · 电流清零 <kbd>Q</kbd></button>
+    <p class="footnote">超出可达范围时保持上一有效目标，手柄红灯震动；恢复可达后继续控制、亮蓝灯。O 键复位完成后，重新以手柄当前姿态为水平参考。</p>
+  </aside>
+  <section class="readings" aria-label="设备回读数据"><div><label>平台 Roll（X）/ °</label><strong id="roll">—</strong></div><div><label>平台 Pitch（Y）/ °</label><strong id="pitch">—</strong></div><div><label>高度 / mm</label><strong id="height">—</strong></div><div class="motors"><label>关节角度 / °</label><p><span>M1 <b id="m1">—</b></span><span>M2 <b id="m2">—</b></span><span>M3 <b id="m3">—</b></span></p></div></section>
+</main>
+<footer><span>严格三维闭环 · 固定装配分支</span><span id="telemetry">等待设备数据</span></footer>
+<script src="/core.js"></script><script src="/serial.js"></script><script src="/kinematics.js"></script><script src="/control.js"></script><script src="/scene.js"></script><script src="/app.js"></script>
+</body></html>

@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>手柄姿态 · DualForge</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='m16 3 12 7v13l-12 7-12-7V10Zm0 14 12-7M16 17 4 10m12 7v13' fill='%23f0c69e' stroke='%232b3537' stroke-width='2'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/style.css"><script defer src="/cube.js"></script><script defer src="/app.js"></script>
+</head>
+<body>
+  <header><a class="brand" href="/" aria-label="DualForge 姿态首页"><svg width="28" height="30" viewBox="0 0 32 32" aria-hidden="true"><path d="m16 3 12 7v13l-12 7-12-7V10Zm0 14 12-7M16 17 4 10m12 7v13" fill="#edc79f" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg><span>DUALFORGE<span class="brand-divider">/</span><span class="brand-sub">motion sketch</span></span></a><div class="connection" role="status"><i id="connectionDot"></i><span id="connectionText">等待手柄</span></div></header>
+  <main>
+    <div class="intro"><div><p class="eyebrow">一点转动，一点直觉。</p><h1>手柄姿态<span class="title-mark" aria-hidden="true">↗</span></h1></div><p class="description">把转动，画出来。<br><span>陀螺仪 × 加速度计</span></p></div>
+    <section class="workbench" aria-label="手柄实时姿态">
+      <div class="stage"><div class="stage-head"><span><b class="live-dot"></b> LIVE ORIENTATION</span><small id="modeText">USB / 六轴姿态</small></div><div class="canvas-wrap"><canvas id="cube" aria-label="随手柄姿态旋转的手绘立方体"></canvas><div id="waiting" class="waiting">连接 USB 手柄，开始转动。</div><span class="paper-note">the world, in a cube.</span></div><div class="stage-foot"><span><i class="front-key"></i>橙色面为正面</span><span id="rateText">等待传感器数据</span></div></div>
+      <aside class="readout"><div class="readout-title"><span>姿态角</span><small>DEGREES</small></div>
+        <div class="angle-row"><div><label>横滚 <span>Roll</span></label><small>左右侧倾 · Z</small></div><output id="roll">—</output><sup>°</sup></div>
+        <div class="angle-row"><div><label>俯仰 <span>Pitch</span></label><small>前后倾斜 · X</small></div><output id="pitch">—</output><sup>°</sup></div>
+        <div class="angle-row"><div><label>偏航 <span>Yaw</span></label><small>水平转向 · Y</small></div><output id="yaw">—</output><sup>°</sup></div>
+        <div class="actions"><button id="zero" disabled>姿态归零 <span>↺</span></button><button id="calibrate" class="secondary" disabled>静止校准</button><div class="calibration-track" aria-hidden="true"><i id="calibrationBar"></i></div><p id="hint" role="status" aria-live="polite">连接后将手柄放稳 2 秒。</p></div>
+      </aside>
+    </section>
+    <div class="under-note"><p>立方体使用四元数旋转。偏航为相对角度，长期可能漂移。</p><span>01 — 姿态观测</span></div>
+    <details><summary>传感器数据 <span>＋</span></summary><div class="sensor-grid"><div><span>陀螺仪 · rad/s</span><code id="gyro">—</code></div><div><span>加速度计 · m/s²</span><code id="accel">—</code></div><div><span>陀螺仪零偏 · rad/s</span><code id="bias">—</code></div><div><span>设备</span><code id="device">等待 USB DualSense</code></div></div></details>
+  </main><footer><span>DUALSENSE / IMU STUDY</span><span>保持好奇，转一下手腕。</span></footer>
+</body>
+</html>
