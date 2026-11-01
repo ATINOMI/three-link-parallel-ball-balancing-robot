@@ -9,7 +9,7 @@
 | DualSense 姿态控制 | [host/dual-control-3rrs](host/dual-control-3rrs) | Roll/Pitch映射、轴线拖动、灵敏度、方向键5°等效升降 |
 | 当前DualForge依赖 | [third_party/dualforge](third_party/dualforge) | 当前程序使用的USB驱动与姿态估计源代码，保留原许可证 |
 
-仓库原有的 `embedded/`、`host/src/` 与 `host/third_party/` 工程保留。上表是本次当前版本的入口；不包含本机构建目录、IDE状态和运行时日志。
+嵌入式代码只使用 `embedded/three_motor/`，对应本地 `E:\HAL32\F4\three_motor`；旧版 Key 固件已从当前分支移除，历史版本仍可通过 Git 提交记录查阅。仓库原有的 `host/src/` 与 `host/third_party/` 保留。上表是当前版本的入口；不包含本机构建目录、IDE状态和运行时日志。
 
 ## 当前固件参数
 
